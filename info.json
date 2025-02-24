@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Automatically captures and stores UTM parameters in Gravity Forms submissions.",
-    "changelog": "### 1.0.0\n- Initial release."
+    "changelog": "### 1.0.1\n- Added functionality to track and store the landing page URL.\n\n### 1.0.0\n- Initial release."
 }

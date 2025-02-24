@@ -24,10 +24,16 @@ The plugin captures UTM parameters from the URL and stores them in cookies. Thes
 
 ## Changelog
 
+### 1.0.1
+- Added functionality to track and store the landing page URL.
+
 ### 1.0.0
 - Initial release.
 
 ## Upgrade Notice
+
+### 1.0.1
+- Added functionality to track and store the landing page URL.
 
 ### 1.0.0
 - Initial release.
