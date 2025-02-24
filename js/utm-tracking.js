@@ -9,6 +9,12 @@
                 console.log(`UTM parameter stored: ${param} = ${params.get(param)}`);
             }
         });
+
+        // Store the landing page URL if not already set
+        if (!document.cookie.split('; ').find(row => row.startsWith('landing_page='))) {
+            document.cookie = `landing_page=${window.location.href}; path=/; max-age=86400`; // Store for 1 day
+            console.log(`Landing page stored: ${window.location.href}`);
+        }
     }
 
     function populateFormFields() {
@@ -18,7 +24,7 @@
             return acc;
         }, {});
 
-        document.querySelectorAll('form input[name^="utm_"]').forEach(input => {
+        document.querySelectorAll('form input[name^="utm_"], form input[name="landing_page"]').forEach(input => {
             if (cookies[input.name]) {
                 input.value = cookies[input.name];
                 console.log(`Populated ${input.name} with ${cookies[input.name]}`);

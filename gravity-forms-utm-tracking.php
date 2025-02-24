@@ -27,7 +27,7 @@ class GF_UTM_Tracking {
     }
 
     public function ensure_utm_fields($form) {
-        $utm_fields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+        $utm_fields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'landing_page'];
         $updated = false;
         
         foreach ($utm_fields as $utm) {
@@ -68,7 +68,7 @@ class GF_UTM_Tracking {
     }
 
     public function populate_utm_fields($value, $field, $name) {
-        if (in_array($name, ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'])) {
+        if (in_array($name, ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'landing_page'])) {
             return isset($_COOKIE[$name]) ? sanitize_text_field($_COOKIE[$name]) : '';
         }
         return $value;
