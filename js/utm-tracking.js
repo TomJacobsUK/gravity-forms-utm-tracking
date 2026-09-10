@@ -11,6 +11,7 @@
     // li.gfield wrapper); the name-based selectors cover older installs and
     // manually added fields
     const FIELD_SELECTOR = '.gfield.gf-utm-field input, input[name^="utm_"], input[name="landing_page"]';
+    const UTM_CLASS_PREFIX = 'gf-utm-field-';
 
     function debug(message, data) {
         if (!DEBUG) {
@@ -79,6 +80,27 @@
         }
     }
 
+    // GF renders hidden inputs as name="input_{id}", so the parameter a field
+    // holds comes from the wrapper's gf-utm-field-{param} class; the input's
+    // own name is the fallback for non-GF markup
+    function resolveParam(input) {
+        const sources = [input.closest('.gfield'), input];
+        for (const element of sources) {
+            if (!element || !element.classList) {
+                continue;
+            }
+            for (const cls of element.classList) {
+                if (cls.indexOf(UTM_CLASS_PREFIX) === 0 && cls.length > UTM_CLASS_PREFIX.length) {
+                    return cls.slice(UTM_CLASS_PREFIX.length);
+                }
+            }
+        }
+        if (input.name === 'landing_page' || input.name.indexOf('utm_') === 0) {
+            return input.name;
+        }
+        return null;
+    }
+
     function populateFormFields(contextLabel, root) {
         const scope = root || document;
         const inputs = scope.querySelectorAll(FIELD_SELECTOR);
@@ -92,16 +114,23 @@
             }
 
             const formId = form.id || '(unnamed form)';
-            const value = getCookie(input.name);
+            const param = resolveParam(input);
+
+            if (param === null) {
+                debug(`Field "${input.name}" in form "${formId}": no UTM parameter resolvable, skipping`);
+                return;
+            }
+
+            const value = getCookie(param);
 
             if (value === null) {
-                debug(`Field "${input.name}" in form "${formId}": no matching cookie, left empty`);
+                debug(`Field "${input.name}" (${param}) in form "${formId}": no matching cookie, left empty`);
                 return;
             }
 
             input.value = value;
             populated++;
-            debug(`Populated "${input.name}" in form "${formId}" with "${value}"`);
+            debug(`Populated "${input.name}" (${param}) in form "${formId}" with "${value}"`);
         });
 
         debug(`populateFormFields (${contextLabel}): ${populated} of ${inputs.length} field(s) populated`);

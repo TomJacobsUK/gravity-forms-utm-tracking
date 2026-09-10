@@ -3,7 +3,7 @@
  * Plugin Name: Gravity Forms UTM Tracking
  * Plugin URI: https://tomjacobs.co.uk
  * Description: Automatically captures and stores UTM parameters in Gravity Forms submissions.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: TomJacobsUK
  * Author URI: https://github.com/TomJacobsUK
  * License: GPL-2.0+
@@ -24,7 +24,7 @@ class GF_UTM_Tracking {
     }
 
     public function enqueue_scripts() {
-        wp_enqueue_script('gf-utm-tracking', plugin_dir_url(__FILE__) . '/js/utm-tracking.js', [], '1.0.3', true);
+        wp_enqueue_script('gf-utm-tracking', plugin_dir_url(__FILE__) . '/js/utm-tracking.js', [], '1.0.5', true);
     }
 
     public function ensure_utm_fields_at_render($form) {
@@ -54,7 +54,7 @@ class GF_UTM_Tracking {
                     'type' => 'hidden',
                     'inputName' => $utm,
                     'label' => ucfirst(str_replace('_', ' ', $utm)),
-                    'cssClass' => 'gf-utm-field',
+                    'cssClass' => 'gf-utm-field gf-utm-field-' . $utm,
                     'allowsPrepopulate' => true,
                 ]);
                 $updated = true;
@@ -71,8 +71,11 @@ class GF_UTM_Tracking {
                 $field->allowsPrepopulate = true;
                 $updated = true;
             }
-            if (strpos((string) ($field->cssClass ?? ''), 'gf-utm-field') === false) {
-                $field->cssClass = trim(($field->cssClass ?? '') . ' gf-utm-field');
+            // Tag the field with the parameter name so the JS can map it to a
+            // cookie even though GF renders hidden inputs as name="input_{id}"
+            $new_css_class = $this->utm_css_class($field->cssClass ?? '', $utm);
+            if ($new_css_class !== (string) ($field->cssClass ?? '')) {
+                $field->cssClass = $new_css_class;
                 $updated = true;
             }
             // Remove hard-coded test/default values, e.g. "Linkedin", so they
@@ -88,6 +91,18 @@ class GF_UTM_Tracking {
         }
 
         return $form;
+    }
+
+    private function utm_css_class($css_class, $utm) {
+        // Keep any styling classes, replace our own tokens (a field may have
+        // been matched to a different parameter before)
+        $classes = preg_split('/\s+/', trim((string) $css_class), -1, PREG_SPLIT_NO_EMPTY);
+        $classes = array_filter($classes, function ($class) {
+            return $class !== 'gf-utm-field' && strpos($class, 'gf-utm-field-') !== 0;
+        });
+        $classes[] = 'gf-utm-field';
+        $classes[] = 'gf-utm-field-' . $utm;
+        return implode(' ', array_unique(array_values($classes)));
     }
 
     private function find_utm_field($form, $utm) {

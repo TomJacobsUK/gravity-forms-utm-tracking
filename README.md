@@ -34,6 +34,9 @@ If you add the hidden fields manually in the form editor, the plugin will detect
 
 ## Changelog
 
+### 1.0.5
+- Tracked fields now carry a per-parameter class (`gf-utm-field-utm_source` etc.) so the JavaScript can map each hidden field to the right cookie — Gravity Forms renders hidden inputs as `name="input_{id}"`, so the name attribute alone is not enough.
+
 ### 1.0.4
 - Manually added hidden UTM fields are now detected by their label or admin label and configured automatically; stale hard-coded default values in them are cleared.
 
@@ -52,6 +55,9 @@ If you add the hidden fields manually in the form editor, the plugin will detect
 - Initial release.
 
 ## Upgrade Notice
+
+### 1.0.5
+- Fields are now tagged with a per-parameter class so JavaScript filling works on cached pages even though hidden inputs are named `input_{id}`.
 
 ### 1.0.4
 - Hidden UTM fields you added manually are now adopted and configured automatically — including clearing any hard-coded test values in them.
