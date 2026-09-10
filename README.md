@@ -30,9 +30,12 @@ The plugin captures UTM parameters from the URL and stores them in cookies. Thes
 
 Yes. The hidden fields added to your forms are tagged with the `gf-utm-field` CSS class, and their values are filled in with JavaScript when the page loads and again just before the form is submitted. This means cached pages that were generated with empty values still capture the correct UTM data.
 
-If you add the hidden fields manually in the form editor, give each one the `gf-utm-field` CSS class (and set the parameter name under Advanced &gt; Allow field to be populated dynamically) so the script can find them.
+If you add the hidden fields manually in the form editor, the plugin will detect them by their label or admin label (e.g. "UTM Source" or "landing-page"), set the parameter name and `gf-utm-field` CSS class for you, and clear any hard-coded default values. Matching happens within each form, so no form or field IDs need to be configured and it works across any number of forms. Alternatively, set the parameter name under Advanced &gt; Allow field to be populated dynamically and add the `gf-utm-field` CSS class yourself.
 
 ## Changelog
+
+### 1.0.4
+- Manually added hidden UTM fields are now detected by their label or admin label and configured automatically; stale hard-coded default values in them are cleared.
 
 ### 1.0.3
 - Debug console logging is now opt-in: enabled by the `gf_utm_debug` cookie, or by visiting with `?utm_debug=1`.
@@ -49,6 +52,9 @@ If you add the hidden fields manually in the form editor, give each one the `gf-
 - Initial release.
 
 ## Upgrade Notice
+
+### 1.0.4
+- Hidden UTM fields you added manually are now adopted and configured automatically — including clearing any hard-coded test values in them.
 
 ### 1.0.3
 - Debug logging is now off by default; enable it with the `gf_utm_debug` cookie or `?utm_debug=1`.

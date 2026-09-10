@@ -3,7 +3,7 @@
  * Plugin Name: Gravity Forms UTM Tracking
  * Plugin URI: https://tomjacobs.co.uk
  * Description: Automatically captures and stores UTM parameters in Gravity Forms submissions.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: TomJacobsUK
  * Author URI: https://github.com/TomJacobsUK
  * License: GPL-2.0+
@@ -16,6 +16,7 @@ class GF_UTM_Tracking {
     public function __construct() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_action('gform_after_save_form', [$this, 'ensure_utm_fields']);
+        add_filter('gform_pre_render', [$this, 'ensure_utm_fields_at_render']);
         add_filter('gform_field_value', [$this, 'populate_utm_fields'], 10, 3);
         add_action('wpmu_new_blog', [$this, 'activate_for_new_site']);
         add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_update']);
@@ -26,35 +27,29 @@ class GF_UTM_Tracking {
         wp_enqueue_script('gf-utm-tracking', plugin_dir_url(__FILE__) . '/js/utm-tracking.js', [], '1.0.3', true);
     }
 
-    public function ensure_utm_fields($form) {
+    public function ensure_utm_fields_at_render($form) {
+        // Normalise fields on every render without persisting, so manually
+        // added UTM fields work immediately; the admin save persists them
+        return $this->ensure_utm_fields($form, false);
+    }
+
+    public function ensure_utm_fields($form, $persist = true) {
         $utm_fields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'landing_page'];
         $updated = false;
-        
-        foreach ($utm_fields as $utm) {
-            $field_exists = false;
 
-            foreach ($form['fields'] as $field) {
-                if (isset($field->inputName) && $field->inputName === $utm) {
-                    $field_exists = true;
-                    // Tag fields from older plugin versions so the JS can fill them on cached pages
-                    if (strpos((string) $field->cssClass, 'gf-utm-field') === false) {
-                        $field->cssClass = trim($field->cssClass . ' gf-utm-field');
-                        $updated = true;
-                    }
-                    break;
-                }
-            }
-            
-            if (!$field_exists) {
+        foreach ($utm_fields as $utm) {
+            $field = $this->find_utm_field($form, $utm);
+
+            if ($field === null) {
                 $new_field_id = 0;
-                foreach ($form['fields'] as $field) {
-                    if ($field->id > $new_field_id) {
-                        $new_field_id = $field->id;
+                foreach ($form['fields'] as $existing) {
+                    if ($existing->id > $new_field_id) {
+                        $new_field_id = $existing->id;
                     }
                 }
                 $new_field_id++;
-                
-                $new_field = GF_Fields::create([
+
+                $form['fields'][] = GF_Fields::create([
                     'id' => $new_field_id,
                     'type' => 'hidden',
                     'inputName' => $utm,
@@ -62,15 +57,58 @@ class GF_UTM_Tracking {
                     'cssClass' => 'gf-utm-field',
                     'allowsPrepopulate' => true,
                 ]);
-                
-                $form['fields'][] = $new_field;
+                $updated = true;
+                continue;
+            }
+
+            // Adopt and normalise an existing (often manually added) hidden
+            // field so the PHP filter and the JS selector can both fill it
+            if (($field->inputName ?? '') !== $utm) {
+                $field->inputName = $utm;
+                $updated = true;
+            }
+            if (empty($field->allowsPrepopulate)) {
+                $field->allowsPrepopulate = true;
+                $updated = true;
+            }
+            if (strpos((string) ($field->cssClass ?? ''), 'gf-utm-field') === false) {
+                $field->cssClass = trim(($field->cssClass ?? '') . ' gf-utm-field');
+                $updated = true;
+            }
+            // Remove hard-coded test/default values, e.g. "Linkedin", so they
+            // cannot be submitted as tracking data
+            if (!empty($field->defaultValue)) {
+                $field->defaultValue = '';
                 $updated = true;
             }
         }
-        
-        if ($updated) {
+
+        if ($persist && $updated) {
             GFAPI::update_form($form);
         }
+
+        return $form;
+    }
+
+    private function find_utm_field($form, $utm) {
+        foreach ($form['fields'] as $field) {
+            $is_hidden = (($field->type ?? '') === 'hidden') || (($field->inputType ?? '') === 'hidden');
+            if (!$is_hidden) {
+                continue;
+            }
+            if (($field->inputName ?? '') === $utm) {
+                return $field;
+            }
+            // Match manually added fields by their admin label or label,
+            // e.g. "Utm Source" or "landing-page"
+            foreach (['adminLabel', 'label'] as $prop) {
+                $text = str_replace([' ', '-'], '_', strtolower(trim((string) ($field->$prop ?? ''))));
+                if ($text === $utm) {
+                    return $field;
+                }
+            }
+        }
+        return null;
     }
 
     public function populate_utm_fields($value, $field, $name) {
