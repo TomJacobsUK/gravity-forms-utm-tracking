@@ -1,8 +1,11 @@
 (function () {
-    // Set to false to silence all debug output in production
-    const DEBUG = true;
     const COOKIE_MAX_AGE = 86400; // 1 day
     const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+    const DEBUG_COOKIE = 'gf_utm_debug';
+
+    // Debug logging is opt-in: the gf_utm_debug cookie enables it, and
+    // visiting with ?utm_debug=1 is the quickest way to set that cookie
+    let DEBUG = enableDebugLogging();
 
     // Fields added by the plugin carry the gf-utm-field CSS class (rendered on the
     // li.gfield wrapper); the name-based selectors cover older installs and
@@ -36,6 +39,17 @@
             }
         }
         return null;
+    }
+
+    function enableDebugLogging() {
+        const param = new URLSearchParams(window.location.search).get('utm_debug');
+        if (param === '1') {
+            setCookie(DEBUG_COOKIE, '1');
+        } else if (param === '0') {
+            // max-age=0 deletes the cookie
+            document.cookie = `${DEBUG_COOKIE}=; path=/; max-age=0`;
+        }
+        return getCookie(DEBUG_COOKIE) !== null;
     }
 
     function storeQueryParams() {

@@ -14,6 +14,10 @@ This plugin automatically captures UTM parameters from the URL and stores them i
 
 ## Frequently Asked Questions
 
+### How do I enable the debug logging?
+
+Debug logging is off by default. Set the `gf_utm_debug` cookie to `1` — the quickest way is to visit the site with `?utm_debug=1` in the URL, which sets the cookie for 24 hours — then open the browser console and look for messages prefixed `[GF UTM Tracking]`. Visit with `?utm_debug=0` or delete the cookie to switch logging off again.
+
 ### How do I ensure UTM fields are present in my forms?
 
 The plugin automatically adds the UTM fields (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`) to your forms if they are not already present. You may need to save each form once after installing.
@@ -30,6 +34,9 @@ If you add the hidden fields manually in the form editor, give each one the `gf-
 
 ## Changelog
 
+### 1.0.3
+- Debug console logging is now opt-in: enabled by the `gf_utm_debug` cookie, or by visiting with `?utm_debug=1`.
+
 ### 1.0.2
 - Added the `gf-utm-field` CSS class to tracked fields so values can be filled via JavaScript on cached pages.
 - Field values are refreshed in JavaScript before submission and on AJAX form re-renders.
@@ -42,6 +49,9 @@ If you add the hidden fields manually in the form editor, give each one the `gf-
 - Initial release.
 
 ## Upgrade Notice
+
+### 1.0.3
+- Debug logging is now off by default; enable it with the `gf_utm_debug` cookie or `?utm_debug=1`.
 
 ### 1.0.2
 - Adds JavaScript-based field filling so UTM tracking works on cached pages. Saving each form once in the admin tags older fields with the new CSS class.

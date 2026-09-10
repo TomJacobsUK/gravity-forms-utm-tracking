@@ -3,7 +3,7 @@
  * Plugin Name: Gravity Forms UTM Tracking
  * Plugin URI: https://tomjacobs.co.uk
  * Description: Automatically captures and stores UTM parameters in Gravity Forms submissions.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: TomJacobsUK
  * Author URI: https://github.com/TomJacobsUK
  * License: GPL-2.0+
@@ -23,7 +23,7 @@ class GF_UTM_Tracking {
     }
 
     public function enqueue_scripts() {
-        wp_enqueue_script('gf-utm-tracking', plugin_dir_url(__FILE__) . '/js/utm-tracking.js', [], '1.0.2', true);
+        wp_enqueue_script('gf-utm-tracking', plugin_dir_url(__FILE__) . '/js/utm-tracking.js', [], '1.0.3', true);
     }
 
     public function ensure_utm_fields($form) {
