@@ -1,5 +1,5 @@
 {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Automatically captures and stores UTM parameters in Gravity Forms submissions.",
-    "changelog": "### 1.0.1\n- Added functionality to track and store the landing page URL.\n\n### 1.0.0\n- Initial release."
+    "changelog": "### 1.0.2\n- Added the gf-utm-field CSS class to tracked fields so values can be filled via JavaScript on cached pages.\n- Field values are refreshed in JavaScript before submission and on AJAX form re-renders.\n- Fixed landing page URL truncation and cookie value encoding.\n\n### 1.0.1\n- Added functionality to track and store the landing page URL.\n\n### 1.0.0\n- Initial release."
 }

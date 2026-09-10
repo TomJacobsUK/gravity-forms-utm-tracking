@@ -3,7 +3,7 @@
  * Plugin Name: Gravity Forms UTM Tracking
  * Plugin URI: https://tomjacobs.co.uk
  * Description: Automatically captures and stores UTM parameters in Gravity Forms submissions.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: TomJacobsUK
  * Author URI: https://github.com/TomJacobsUK
  * License: GPL-2.0+
@@ -23,7 +23,7 @@ class GF_UTM_Tracking {
     }
 
     public function enqueue_scripts() {
-        wp_enqueue_script('gf-utm-tracking', plugin_dir_url(__FILE__) . '/js/utm-tracking.js', [], '1.0.0', true);
+        wp_enqueue_script('gf-utm-tracking', plugin_dir_url(__FILE__) . '/js/utm-tracking.js', [], '1.0.2', true);
     }
 
     public function ensure_utm_fields($form) {
@@ -32,10 +32,15 @@ class GF_UTM_Tracking {
         
         foreach ($utm_fields as $utm) {
             $field_exists = false;
-            
+
             foreach ($form['fields'] as $field) {
                 if (isset($field->inputName) && $field->inputName === $utm) {
                     $field_exists = true;
+                    // Tag fields from older plugin versions so the JS can fill them on cached pages
+                    if (strpos((string) $field->cssClass, 'gf-utm-field') === false) {
+                        $field->cssClass = trim($field->cssClass . ' gf-utm-field');
+                        $updated = true;
+                    }
                     break;
                 }
             }
@@ -54,6 +59,7 @@ class GF_UTM_Tracking {
                     'type' => 'hidden',
                     'inputName' => $utm,
                     'label' => ucfirst(str_replace('_', ' ', $utm)),
+                    'cssClass' => 'gf-utm-field',
                     'allowsPrepopulate' => true,
                 ]);
                 
@@ -68,8 +74,9 @@ class GF_UTM_Tracking {
     }
 
     public function populate_utm_fields($value, $field, $name) {
-        if (in_array($name, ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'landing_page'])) {
-            return isset($_COOKIE[$name]) ? sanitize_text_field($_COOKIE[$name]) : '';
+        if (in_array($name, ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'landing_page'], true)) {
+            // Cookies are URI-encoded by js/utm-tracking.js
+            return isset($_COOKIE[$name]) ? sanitize_text_field(urldecode($_COOKIE[$name])) : '';
         }
         return $value;
     }
@@ -77,7 +84,16 @@ class GF_UTM_Tracking {
     public function activate_for_new_site($blog_id) {
         if (is_plugin_active_for_network(plugin_basename(__FILE__))) {
             switch_to_blog($blog_id);
-            $this->ensure_utm_fields();
+
+            if (class_exists('GFAPI')) {
+                $forms = GFAPI::get_forms();
+                if (is_array($forms)) {
+                    foreach ($forms as $form) {
+                        $this->ensure_utm_fields($form);
+                    }
+                }
+            }
+
             restore_current_blog();
         }
     }
@@ -109,7 +125,9 @@ class GF_UTM_Tracking {
             return $result;
         }
 
-        if ($args->slug !== plugin_basename(__FILE__)) {
+        $plugin_slug = dirname(plugin_basename(__FILE__));
+
+        if (empty($args->slug) || $args->slug !== $plugin_slug) {
             return $result;
         }
 
@@ -117,7 +135,7 @@ class GF_UTM_Tracking {
 
         return (object) [
             'name' => 'Gravity Forms UTM Tracking',
-            'slug' => plugin_basename(__FILE__),
+            'slug' => $plugin_slug,
             'version' => $remote_info->version,
             'author' => 'Tom Jacobs',
             'author_profile' => 'https://tomjacobs.co.uk',

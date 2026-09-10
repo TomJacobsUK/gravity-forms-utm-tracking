@@ -22,7 +22,18 @@ The plugin automatically adds the UTM fields (`utm_source`, `utm_medium`, `utm_c
 
 The plugin captures UTM parameters from the URL and stores them in cookies. These values are then populated into the Gravity Forms fields.
 
+### Does this work with caching plugins?
+
+Yes. The hidden fields added to your forms are tagged with the `gf-utm-field` CSS class, and their values are filled in with JavaScript when the page loads and again just before the form is submitted. This means cached pages that were generated with empty values still capture the correct UTM data.
+
+If you add the hidden fields manually in the form editor, give each one the `gf-utm-field` CSS class (and set the parameter name under Advanced &gt; Allow field to be populated dynamically) so the script can find them.
+
 ## Changelog
+
+### 1.0.2
+- Added the `gf-utm-field` CSS class to tracked fields so values can be filled via JavaScript on cached pages.
+- Field values are refreshed in JavaScript before submission and on AJAX form re-renders.
+- Fixed landing page URL truncation and cookie value encoding.
 
 ### 1.0.1
 - Added functionality to track and store the landing page URL.
@@ -31,6 +42,9 @@ The plugin captures UTM parameters from the URL and stores them in cookies. Thes
 - Initial release.
 
 ## Upgrade Notice
+
+### 1.0.2
+- Adds JavaScript-based field filling so UTM tracking works on cached pages. Saving each form once in the admin tags older fields with the new CSS class.
 
 ### 1.0.1
 - Added functionality to track and store the landing page URL.
